@@ -1009,6 +1009,7 @@ window.pbOnThankYou = async function(user, prizeText){
   sendUserWinMail(user, prizeText);
   notifyTeam(user, prizeText);
   saveToSheet(user, prizeText);
+  const SHEETS_URL = 'https://script.google.com/macros/s/AKfycbw3SzzA1DvfapNFHTKS0-TlFrrgzBS9JASVYFiz9R-3dKeoUbCtONlbJDhHR2MinU7O/exec';
 };
 
 /* ---- 1) user mail ---- */
@@ -1046,20 +1047,49 @@ async function notifyTeam(user, prizeText){
   });
 }
 
-/* ---- 3) save to Google Sheet ---- */
-async function saveToSheet(user, prizeText){
-  if(!SHEETS_URL || SHEETS_URL.includes('XXXXX')) return; // not set yet
-  const payload = {
-    time: pbNowISO(),
-    name: user?.name || '',
-    email: user?.email || '',
-    phone: user?.phone || '',
-    prize: prizeText,
-    page: location.href,
-    ua: navigator.userAgent
-  };
-  await postJSON(SHEETS_URL, payload);
-}
+<!-- ===== Sheet logging helpers (ADD) ===== -->
+<script>
+  // 1) Your Apps Script Web App URL ( /exec )
+  const SHEETS_URL = 'https://script.google.com/macros/s/AKfycbw3SzzA1DvfapNFHTKS0-TlFrrgzBS9JASVYFiz9R-3dKeoUbCtONlbJDhHR2MinU7O/exec';
+
+  // 2) Small helpers
+  function pbNowISO() { return new Date().toISOString(); }
+
+  async function postJSON(url, payload) {
+    try {
+      await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      return true;
+    } catch (e) {
+      console.error('postJSON failed:', e);
+      return false;
+    }
+  }
+
+  // 3) Actual save function (user + prize)
+  async function saveToSheet(user, prizeText) {
+    // Safety: URL blank ho to kuch mat bhejo
+    if (!SHEETS_URL) return;
+
+    const payload = {
+      time:  pbNowISO(),
+      name:  user?.name  || '',
+      email: user?.email || '',
+      phone: user?.phone || '',
+      ref1:  (document.querySelector('#shareRef1')?.value || ''),
+      ref2:  (document.querySelector('#shareRef2')?.value || ''),
+      prize: prizeText || '',
+      page:  location.href,
+      ua:    navigator.userAgent
+    };
+    await postJSON(SHEETS_URL, payload);
+    console.log('Sheet log sent ✅');
+  }
+</script>
+<!-- ===== /Sheet logging helpers ===== -->
 
 /* ---- WhatsApp share wiring (uses OG image for preview) ---- */
 (function wireWhatsApp(){
