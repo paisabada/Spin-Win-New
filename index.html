@@ -141,6 +141,16 @@
   #tncHeader h3{ font-size: 18px; }
   #tncBody{ font-size: 14px; }
 }
+<!-- ===== PB ADD-ON: Social preview for WhatsApp/Twitter ===== -->
+<meta property="og:title" content="🎉 I won ₹500 SIP on PaisaBada! Try your luck ✨" />
+<meta property="og:description" content="Spin & Win — No cash rewards. ₹500 SIP investment credit on eligible win. T&C apply." />
+<meta property="og:image" content="https://paisabada.in/assets/pb-win-card.jpg" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="1800" />
+<meta property="og:url" content="https://paisabada.in/spin" />
+<meta property="og:type" content="website" />
+<meta name="twitter:card" content="summary_large_image" />
+<!-- ===== /PB ADD-ON ===== -->
 </style>
 </head>
 <body>
@@ -410,6 +420,23 @@ document.getElementById('submitBtn').addEventListener('click',()=>{
     openShare(genericMsg,ref2);
     closePopup();
     document.getElementById('thankyou').style.display='flex';
+<!-- PB ADD-ON HOOK: fire mails + sheet on thankyou -->
+<script>
+try {
+  const user = {
+    name:  document.querySelector('#name')?.value?.trim()  || '',
+    email: document.querySelector('#email')?.value?.trim() || '',
+    phone: document.querySelector('#phone')?.value?.trim() || ''
+  };
+  const prizeText =
+    window.currentPrizeText ||
+    document.querySelector('#pb-prize')?.textContent ||
+    '₹500 SIP';
+  window.pbOnThankYou && window.pbOnThankYou(user, prizeText);
+} catch(_) {}
+</script>
+<!-- /PB ADD-ON HOOK -->
+
   };
 });
 </script>
@@ -952,6 +979,108 @@ if (!window.saveLead) {
   }
 })();
 </script>
+<!-- ========== PB ADD-ONS (non-invasive) ========== -->
+<script>
+/* ---- CONFIG (replace with your values) ---- */
+const MAILER_URL   = "https://pb-mailer-six.vercel.app";       // Vercel mailer (base, no trailing '/')
+const SHEETS_URL   = "https://script.google.com/macros/s/XXXXX/exec"; // Apps Script WebApp URL
+const WIN_CARD_IMG = "https://paisabada.in/assets/pb-win-card.jpg";   // Hosted Win-Card image
+const TEAM_EMAIL   = "contact@paisabada.in";                   // Team inbox (optional fallback)
 
+/* ---- small utils ---- */
+const pbNowISO = () => new Date().toISOString();
+async function postJSON(url, payload){
+  try{
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify(payload)
+    });
+    return { ok: res.ok, data: await res.json().catch(()=>({})) };
+  }catch(e){
+    console.warn('POST fail', url, e);
+    return { ok:false, data:{ error: String(e) } };
+  }
+}
+
+/* ---- public hook (called from Step‑2) ---- */
+window.pbOnThankYou = async function(user, prizeText){
+  // fire-and-forget (no await so UI not blocked)
+  sendUserWinMail(user, prizeText);
+  notifyTeam(user, prizeText);
+  saveToSheet(user, prizeText);
+};
+
+/* ---- 1) user mail ---- */
+async function sendUserWinMail(user, prizeText){
+  if(!user?.email) return;
+  const subject = "🎉 Your ₹500 SIP win is confirmed!";
+  const html = `
+    <div style="font-family:Inter,Arial,sans-serif;color:#0f172a">
+      <img alt="PaisaBada" src="${WIN_CARD_IMG}"
+           style="max-width:100%;width:600px;display:block;margin:0 auto 12px;border-radius:12px"/>
+      <h2 style="text-align:center;margin:0 0 8px">Thank you${user.name ? ', '+escapeHtml(user.name): ''}!</h2>
+      <p style="text-align:center;margin:0 0 14px">
+        Your <b>${escapeHtml(prizeText)}</b> SIP win is confirmed. Team PaisaBada will connect you soon.
+      </p>
+      <p style="font-size:12px;color:#475569;text-align:center">
+        No cash rewards. SIP investment credit only. T&amp;C apply.
+      </p>
+    </div>`;
+  await postJSON(`${MAILER_URL}/api/send-mails`, { to:user.email, subject, html });
+}
+
+/* ---- 2) team mail (lead) ---- */
+async function notifyTeam(user, prizeText){
+  const html = `
+    <h3>New Spin &amp; Win lead</h3>
+    <p><b>Prize:</b> ${escapeHtml(prizeText)}</p>
+    <p><b>Name:</b> ${escapeHtml(user?.name || 'N/A')}</p>
+    <p><b>Email:</b> ${escapeHtml(user?.email || 'N/A')}</p>
+    <p><b>Phone:</b> ${escapeHtml(user?.phone || 'N/A')}</p>
+    <p><b>Time:</b> ${pbNowISO()}</p>
+    <p><b>Page:</b> ${location.href}</p>
+    <p><b>UA:</b> ${escapeHtml(navigator.userAgent)}</p>`;
+  await postJSON(`${MAILER_URL}/api/send-mails`, {
+    to: TEAM_EMAIL, subject: "New Spin & Win lead", html
+  });
+}
+
+/* ---- 3) save to Google Sheet ---- */
+async function saveToSheet(user, prizeText){
+  if(!SHEETS_URL || SHEETS_URL.includes('XXXXX')) return; // not set yet
+  const payload = {
+    time: pbNowISO(),
+    name: user?.name || '',
+    email: user?.email || '',
+    phone: user?.phone || '',
+    prize: prizeText,
+    page: location.href,
+    ua: navigator.userAgent
+  };
+  await postJSON(SHEETS_URL, payload);
+}
+
+/* ---- WhatsApp share wiring (uses OG image for preview) ---- */
+(function wireWhatsApp(){
+  const btnIds = ['shareRef1','shareRef2','shareGroup1','shareGroup2','btnShareWA'];
+  const text = "🎉 I won ₹500 SIP on PaisaBada! Try your luck:";
+  const url  = location.href.split('#')[0];
+  const wa   = `https://wa.me/?text=${encodeURIComponent(text+' '+url)}`;
+  btnIds.forEach(id=>{
+    const el = document.getElementById(id);
+    if(el){
+      el.addEventListener('click', e=>{
+        e.preventDefault();
+        window.open(wa, '_blank');
+      }, {passive:false});
+    }
+  });
+})();
+
+/* ---- tiny helper ---- */
+function escapeHtml(s){return String(s).replace(/[&<>"']/g,m=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));}
+</script>
+<!-- ========== /PB ADD-ONS ========== -->
 </body>
 </html>
