@@ -151,6 +151,12 @@
 <meta property="og:type" content="website" />
 <meta name="twitter:card" content="summary_large_image" />
 <!-- ===== /PB ADD-ON ===== -->
+<!-- OG tags for WhatsApp/Telegram preview -->
+<meta property="og:title" content="🎉 I Won ₹500 SIP on PaisaBada!" />
+<meta property="og:description" content="Try your luck — Spin & Win on PaisaBada." />
+<meta property="og:image" content="https://piasabada.in/spin/win-card-500.jpg" />
+<meta property="og:type" content="website" />
+<meta name="twitter:card" content="summary_large_image" />
 </style>
 </head>
 <body>
@@ -421,6 +427,15 @@ document.getElementById('submitBtn').addEventListener('click',()=>{
     closePopup();
     document.getElementById('thankyou').style.display='flex';
 <!-- PB ADD-ON HOOK: fire mails + sheet on thankyou -->
+    // ---- Trigger mails + sheet after Thank-You ----------------
+const user = {
+  name:  document.querySelector('#name')?.value || '',
+  email: document.querySelector('#email')?.value || '',
+  phone: document.querySelector('#phone')?.value || ''
+};
+const prizeText = (typeof getPrizeText === 'function' ? getPrizeText() : '₹500 SIP'); // fallback
+pbOnThankYou(user, prizeText);
+
 <script>
 try {
   const user = {
@@ -1089,6 +1104,7 @@ async function notifyTeam(user, prizeText){
     console.log('Sheet log sent ✅');
   }
 </script>
+<script>
 <!-- ===== /Sheet logging helpers ===== -->
 
 /* ---- WhatsApp share wiring (uses OG image for preview) ---- */
@@ -1112,5 +1128,85 @@ async function notifyTeam(user, prizeText){
 function escapeHtml(s){return String(s).replace(/[&<>"']/g,m=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));}
 </script>
 <!-- ========== /PB ADD-ONS ========== -->
+  <!-- ===== PaisaBada: mail + sheet constants & helpers (DO NOT edit wheel logic) ===== -->
+<script>
+// 0) CONFIG  -------------------------------------------------------
+const MAILER_URL = "https://pb-mailer-six.vercel.app";   // Vercel mailer base (aapka deployed)
+const TEAM_EMAIL = "contact@paisabada.in";               // team inbox
+const SHEETS_URL = "https://script.google.com/macros/s/AKfycbw3SzzA1DvfapNFHTKS0-TlFrrgzBS9JASVYFiz9R-3dKeoUbCtONlbJDhHR2MinU7O/exec"; // Apps Script web-app
+
+// 0.1) SAFE helpers ------------------------------------------------
+const escapeHtml = (s) => String(s ?? "")
+  .replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")
+  .replace(/"/g,"&quot;").replace(/'/g,"&#039;");
+const pbNowISO = () => new Date().toISOString();
+
+async function postJSON(url, payload){
+  const res = await fetch(url, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload) });
+  let data = null; try { data = await res.json(); } catch {}
+  if(!res.ok){ throw new Error((data && (data.error||data.message)) || ('HTTP '+res.status)); }
+  return data || { ok:true };
+}
+
+// 1) Send auto‑reply to user ---------------------------------------
+async function sendUserWinMail(user, prizeText){
+  if(!user?.email) return;
+  const subject = "🎉 Your ₹500 SIP win is confirmed!";
+  const html = `
+    <div style="font-family:Inter,Arial,sans-serif;color:#0f172a">
+      <img alt="PaisaBada" src="https://piasabada.in/spin/win-card-500.jpg"
+           style="width:100%;max-width:600px;display:block;margin:0 auto 12px;border-radius:12px"/>
+      <h2 style="text-align:center;margin:8px 0">Thank you, ${escapeHtml(user.name||"")}!</h2>
+      <p style="font-size:12px;color:#475569;text-align:center;margin:0 12px">
+        <b>${escapeHtml(prizeText)}</b> SIP win is confirmed. Team PaisaBada will connect you soon.<br/>
+        No cash rewards. SIP investment credit only. T&amp;C apply.
+      </p>
+    </div>`;
+  await postJSON(`${MAILER_URL}/api/send-mails`, { to:user.email, subject, html });
+}
+
+// 2) Notify PaisaBada team ----------------------------------------
+async function notifyTeam(user, prizeText){
+  const html = `
+    <h3>New Spin &amp; Win lead</h3>
+    <p><b>Prize:</b> ${escapeHtml(prizeText)}</p>
+    <p><b>Name:</b> ${escapeHtml(user?.name || 'N/A')}</p>
+    <p><b>Email:</b> ${escapeHtml(user?.email || 'N/A')}</p>
+    <p><b>Phone:</b> ${escapeHtml(user?.phone || 'N/A')}</p>
+    <p><b>Time:</b> ${pbNowISO()}</p>
+    <p><b>Page:</b> ${escapeHtml(location.href)}</p>
+    <p><b>UA:</b> ${escapeHtml(navigator.userAgent)}</p>`;
+  await postJSON(`${MAILER_URL}/api/send-mails`, { to: TEAM_EMAIL, subject: "New Spin & Win lead", html });
+}
+
+// 3) Save to Google Sheet ------------------------------------------
+async function saveToSheet(user, prizeText){
+  if(!SHEETS_URL || SHEETS_URL.includes('XXXX')) return;
+  const payload = {
+    time: pbNowISO(),
+    name: user?.name || '',
+    email: user?.email || '',
+    phone: user?.phone || '',
+    ref1:  document.querySelector('#shareRef1')?.value || '',
+    ref2:  document.querySelector('#shareRef2')?.value || '',
+    prize: prizeText || '',
+    page:  location.href,
+    ua:    navigator.userAgent
+  };
+  await postJSON(SHEETS_URL, payload);
+  console.log('Sheet log sent ✅');
+}
+
+// 4) Public hook (call after Thank-You shows) ----------------------
+function pbOnThankYou(user, prizeText){
+  try{
+    // fire-and-forget so UI not blocked
+    sendUserWinMail(user, prizeText);   // no await
+    notifyTeam(user, prizeText);        // no await
+    saveToSheet(user, prizeText);       // no await
+  }catch(e){ console.error('pbOnThankYou error:', e); }
+}
+</script>
+
 </body>
 </html>
