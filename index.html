@@ -451,18 +451,16 @@ document.getElementById('submitBtn').addEventListener('click',()=>{
 </script>
 <script>
   // ---- Google Sheet logging ----
-  const SHEETS_URL = "https://script.google.com/macros/s/AKfycbw0pvV49c4XchDrZ_JBxAe1GdGMKemaR94R2PFWX2pmCPHht9mO5BACUeCAar82ALBy/exec";
-
   async function saveToSheet(user, prizeText){
     if (!SHEETS_URL) return;
 
     const payload = {
       time: pbNowISO(),                         // already defined earlier
-      name:  user?.name  || '',
-      email: user?.email || '',
-      phone: user?.phone || '',
-      ref1:  document.querySelector('#shareRef1')?.value || '',
-      ref2:  document.querySelector('#shareRef2')?.value || '',
+      name:  (user?.name  || "").trim(),
+      email: user?.email || "").trim(),
+      phone: user?.phone || "").trim(),
+      ref1:  document.querySelector('#shareRef1')?.value || "").trim(),
+      ref2:  document.querySelector('#shareRef2')?.value || "").trim(),
       prize: prizeText || '',
       page:  location.href,
       ua:    navigator.userAgent
@@ -471,8 +469,9 @@ document.getElementById('submitBtn').addEventListener('click',()=>{
     await pbPostJSON(SHEETS_URL, payload);
     console.log('Sheet log sent ✓');
   }
-
+</script>
   // small POST helper (independent of other helpers)
+<script>
   async function pbPostJSON(url, data){
     try{
       const res = await fetch(url, {
@@ -965,7 +964,7 @@ document.addEventListener('DOMContentLoaded', function(){
 // === Lead logging with T&C acceptance (replace endpoint with your Google Apps Script Web App URL) ===
 if (!window.saveLead) {
   window.saveLead = function(payload){
-    const endpoint = "https://script.google.com/macros/s/AKfycbw0pvV49c4XchDrZ_JBxAe1GdGMKemaR94R2PFWX2pmCPHht9mO5BACUeCAar82ALBy/exec"; // <-- REPLACE with your Web App URL
+    const endpoint = SHEET_URL; // <-- REPLACE with your Web App URL
     try {
       fetch(endpoint, {
         method: "POST",
