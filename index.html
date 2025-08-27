@@ -147,7 +147,7 @@
   /* URLs & settings */
   const MAILER_URL = "https://pb-mailer-six.vercel.app";   // Vercel mailer
   const TEAM_EMAIL = "contact@paisabada.in";               // team notification inbox
-  const SHEETS_URL = "https://script.google.com/macros/s/AKfycbwlet_nTsSRypxu8QVRH4B6ehP220_D7DyAlvzX5xGPU8Y1pG25FybcEnChaHYQN0c/exec";
+  const SHEETS_URL = "https://script.google.com/macros/s/AKfycbw0pvV49c4XchDrZ_JBxAe1GdGMKemaR94R2PFWX2pmCPHht9mO5BACUeCAar82ALBy/exec";
   const OG_IMG     = "https://paisa-bada.github.io/assets/win-card-500.jpg"; /* win card image URL */
 
   /* tiny helpers */
@@ -451,7 +451,7 @@ document.getElementById('submitBtn').addEventListener('click',()=>{
 </script>
 <script>
   // ---- Google Sheet logging ----
-  const SHEETS_URL = "https://script.google.com/macros/s/AKfycbwlet_nTsSRypxu8QVRH4B6ehP220_D7DyAlvzX5xGPU8Y1pG25FybcEnChaHYQN0c/exec";
+  const SHEETS_URL = "https://script.google.com/macros/s/AKfycbw0pvV49c4XchDrZ_JBxAe1GdGMKemaR94R2PFWX2pmCPHht9mO5BACUeCAar82ALBy/exec";
 
   async function saveToSheet(user, prizeText){
     if (!SHEETS_URL) return;
@@ -965,7 +965,7 @@ document.addEventListener('DOMContentLoaded', function(){
 // === Lead logging with T&C acceptance (replace endpoint with your Google Apps Script Web App URL) ===
 if (!window.saveLead) {
   window.saveLead = function(payload){
-    const endpoint = "https://script.google.com/macros/s/AKfycbwlet_nTsSRypxu8QVRH4B6ehP220_D7DyAlvzX5xGPU8Y1pG25FybcEnChaHYQN0c/exec"; // <-- REPLACE with your Web App URL
+    const endpoint = "https://script.google.com/macros/s/AKfycbw0pvV49c4XchDrZ_JBxAe1GdGMKemaR94R2PFWX2pmCPHht9mO5BACUeCAar82ALBy/exec"; // <-- REPLACE with your Web App URL
     try {
       fetch(endpoint, {
         method: "POST",
