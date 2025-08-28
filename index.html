@@ -1072,9 +1072,6 @@ async function notifyTeam(user, prizeText){
     to: TEAM_EMAIL, subject: "New Spin & Win lead", html
   });
 }
-
-/* 5) tiny helpers */
-function pbNowISO(){ return new Date().toISOString(); }
 function escapeHtml(s){
   return String(s ?? '')
     .replace(/&/g,'&amp;').replace(/</g,'&lt;')
