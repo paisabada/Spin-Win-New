@@ -147,7 +147,7 @@
   /* URLs & settings */
   const MAILER_URL = "https://pb-mailer-six.vercel.app";   // Vercel mailer
   const TEAM_EMAIL = "contact@paisabada.in";               // team notification inbox
-  const SHEETS_URL = "https://script.google.com/macros/s/AKfycbw0pvV49c4XchDrZ_JBxAe1GdGMKemaR94R2PFWX2pmCPHht9mO5BACUeCAar82ALBy/exec";
+  const SHEETS_URL = "https://script.google.com/macros/s/AKfycbxhLWqNyZeerI-Ww7DmSFUhEvij8pDxHzcUP1RJtSYW5t2AE3mFUIWdyPTqQycsDwDz/exec";
   const OG_IMG     = "https://paisa-bada.github.io/assets/win-card-500.jpg"; /* win card image URL */
 
   /* tiny helpers */
@@ -450,41 +450,41 @@ document.getElementById('submitBtn').addEventListener('click',()=>{
 });
 </script>
 <script>
-  // ---- Google Sheet logging ----
-  async function saveToSheet(user, prizeText){
-    if (!SHEETS_URL) return;
+  // —— Google Sheet logging ——
+async function saveToSheet(user, prizeText){
+  if (!SHEETS_URL) return;
 
-    const payload = {
-      time: pbNowISO(),                         // already defined earlier
-      name:  (user?.name  || "").trim(),
-      email: user?.email || "").trim(),
-      phone: user?.phone || "").trim(),
-      ref1:  document.querySelector('#shareRef1')?.value || "").trim(),
-      ref2:  document.querySelector('#shareRef2')?.value || "").trim(),
-      prize: prizeText || '',
-      page:  location.href,
-      ua:    navigator.userAgent
-    };
+  const payload = {
+    time:  pbNowISO(),
+    name:  user?.name  || '',
+    email: user?.email || '',
+    phone: user?.phone || '',
+    ref1:  (document.querySelector('#shareRef1')?.value || '').trim(),
+    ref2:  (document.querySelector('#shareRef2')?.value || '').trim(),
+    prize: prizeText,
+    page:  location.href,
+    ua:    navigator.userAgent
+  };
 
-    await pbPostJSON(SHEETS_URL, payload);
-    console.log('Sheet log sent ✓');
+  await pbPostJSON(SHEETS_URL, payload);
+  console.log('Sheet log sent ✓');
   }
 </script>
-  // small POST helper (independent of other helpers)
 <script>
-  async function pbPostJSON(url, data){
-    try{
-      const res = await fetch(url, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data)
-      });
-      return await res.json().catch(() => ({}));
-    }catch(e){
-      console.error('Sheet POST failed', e);
-      return { ok:false, error:String(e) };
-    }
+  // small POST helper (independent of other helpers)
+async function pbPostJSON(url, data){
+  try{
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    });
+    return await res.json().catch(()=> ({}));
+  }catch(e){
+    console.error('Sheet POST failed', e);
+    return { ok:false, error:String(e) };
   }
+}
 </script>
 <!-- WebAudio tick-tick that follows spin speed (no logic changes) -->
 <script>
@@ -962,16 +962,16 @@ document.addEventListener('DOMContentLoaded', function(){
 </script>
 <script>
 // === Lead logging with T&C acceptance (replace endpoint with your Google Apps Script Web App URL) ===
-if (!window.saveLead) {
+if (window.saveLead) {
   window.saveLead = function(payload){
-    const endpoint = SHEET_URL; // <-- REPLACE with your Web App URL
-    try {
+    try{
+      const endpoint = SHEETS_URL; // <— use the constant, not a string
       fetch(endpoint, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
       }).catch(()=>{});
-    } catch(e) {}
+    }catch(e){}
   };
 }
 
