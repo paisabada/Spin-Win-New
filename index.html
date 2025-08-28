@@ -153,7 +153,6 @@
   /* tiny helpers */
   const $ = (q, root=document)=>root.querySelector(q);
   const pbNowISO = ()=> new Date().toISOString();
-  const escapeHtml = s => (s??"").toString().replace(/[&<>"']/g, m=>({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[m]));
   async function postJSON(url, data){
     const res = await fetch(url, {method:"POST",headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
     try { return await res.json(); } catch { return {ok:res.ok}; }
