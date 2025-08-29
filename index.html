@@ -147,7 +147,7 @@
   /* URLs & settings */
   const MAILER_URL = "https://pb-mailer-six.vercel.app";   // Vercel mailer
   const TEAM_EMAIL = "contact@paisabada.in";               // team notification inbox
-  const SHEETS_URL = "https://script.google.com/macros/s/AKfycbw-zmWWBpNtegf3wfUDrAUsDKJaEbj4N4lJRw2MsAnqUiUnm0mMrDN9wLCwLOs3RgpX/exec";
+  const SHEETS_URL = "https://script.google.com/macros/s/AKfycbyZXaJRJ4C9Xluq0ZuACmd3E4LfHHjNVYKZqK_UWAOPlmCOsg-sjxCZ7fZrTJdPEXc0/exec";
   const OG_IMG     = "https://paisa-bada.github.io/assets/win-card-500.jpg"; /* win card image URL */
 </script>
   
@@ -941,20 +941,25 @@ document.addEventListener('DOMContentLoaded', function(){
 <li>WhatsApp: +91 7620444000</li>
 </ul>
 </div></div></div>
+  
   <script>
-window.saveLead = function(payload) {
-  const endpoint = SHEETS_URL; // <-- tumhara Google Apps Script exec URL
-  if (!endpoint) return;
+  // Fire-and-forget lead logger (no preflight)
+  window.saveLead = function (payload) {
+    const endpoint = SHEETS_URL;            // your Apps Script /exec URL
+    if (!endpoint) return;
 
-  fetch(endpoint, {
-    method: "POST",
-    headers: { "Content-Type": "text/plain;charset=utf-8" },
-    body: JSON.stringify(payload)
-  })
-  .then(r => console.log("Lead saved ✓"))
-  .catch(err => console.error("Lead save failed", err));
-};
+    try {
+      fetch(endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' }, // important!
+        body: JSON.stringify(payload)
+      })
+      .then(() => console.log('Lead saved ✓'))
+      .catch(() => {}); // ignore network errors silently
+    } catch (e) {}
+  };
 </script>
+
 <script>
 (function(){
   const open = document.getElementById('openTnC');
