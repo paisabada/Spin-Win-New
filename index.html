@@ -149,14 +149,31 @@
   const TEAM_EMAIL = "contact@paisabada.in";               // team notification inbox
   const SHEETS_URL = "https://script.google.com/macros/s/AKfycbwvK7xb-sXxcWLPzVa_aUmiWmqBDIiQgwriAS1XN2bSjUK_sD4SoajtJIY0yyYRsrZQ/exec";
   const OG_IMG     = "https://paisa-bada.github.io/assets/win-card-500.jpg"; /* win card image URL */
+</script>
+  
+  <script>
+/* tiny helpers */
+const $ = (q, root = document) => root.querySelector(q);
 
-  /* tiny helpers */
-  const $ = (q, root=document)=>root.querySelector(q);
-  const pbNowISO = ()=> new Date().toISOString();
-  async function postJSON(url, data){
-    const res = await fetch(url, {method:"POST",headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
-    try { return await res.json(); } catch { return {ok:res.ok}; }
+const pbNowISO = () => new Date().toISOString();
+
+const escapeHtml = s => (s ?? '').toString()
+  .replace(/[&<>]/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[m]))
+  .replace(/"/g, '&quot;')
+  .replace(/'/g, '&#39;');
+
+async function postJSON(url, data) {
+  try {
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    });
+    return await res.json();
+  } catch (e) {
+    return { ok: false, error: String(e) };
   }
+}
 </script>
 <!-- === /PB integrations === -->
   <!-- ===== Open Graph / WhatsApp preview ===== -->
@@ -1070,26 +1087,6 @@ async function notifyTeam(user, prizeText){
   await postJSON(`${MAILER_URL}/api/send-mails`, {
     to: TEAM_EMAIL, subject: "New Spin & Win lead", html
   });
-}
-function escapeHtml(s){
-  return String(s ?? '')
-    .replace(/&/g,'&amp;').replace(/</g,'&lt;')
-    .replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
-}
-async function postJSON(url, payload){
-  try{
-    const res = await fetch(url, {
-      method: 'POST',
-      headers: {'Content-Type':'application/json'},
-      body: JSON.stringify(payload)
-    });
-    let data = {};
-    try { data = await res.json(); } catch(_){}
-    return { ok: res.ok, data };
-  }catch(e){
-    console.error('postJSON error:', e);
-    return { ok:false, error:String(e) };
-  }
 }
 </script>
 </body>
