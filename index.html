@@ -933,6 +933,20 @@ document.addEventListener('DOMContentLoaded', function(){
 <li>WhatsApp: +91 7620444000</li>
 </ul>
 </div></div></div>
+  <script>
+window.saveLead = function(payload) {
+  const endpoint = SHEETS_URL; // <-- tumhara Google Apps Script exec URL
+  if (!endpoint) return;
+
+  fetch(endpoint, {
+    method: "POST",
+    headers: { "Content-Type": "text/plain;charset=utf-8" },
+    body: JSON.stringify(payload)
+  })
+  .then(r => console.log("Lead saved ✓"))
+  .catch(err => console.error("Lead save failed", err));
+};
+</script>
 <script>
 (function(){
   const open = document.getElementById('openTnC');
