@@ -482,7 +482,7 @@ async function saveToSheet(user, prizeText){
     time:  pbNowISO(),
     name:  user?.name  || '',
     email: user?.email || '',
-    phone: user?.phone || '',
+    mobile: user?.mobile || '',
     ref1:  (document.querySelector('#shareRef1')?.value || '').trim(),
     ref2:  (document.querySelector('#shareRef2')?.value || '').trim(),
     prize: prizeText,
