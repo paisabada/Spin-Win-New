@@ -147,7 +147,7 @@
   /* URLs & settings */
   const MAILER_URL = "https://pb-mailer-six.vercel.app";   // Vercel mailer
   const TEAM_EMAIL = "contact@paisabada.in";               // team notification inbox
-  const SHEETS_URL = "https://script.google.com/macros/s/AKfycbx_ZuPW1SaYIseahsW4KmPHsJKIQlwji_yXd-WEv1Rzb4pYhEAbnWSJNnMgLrpuX_EY/exec";
+  const SHEETS_URL = "https://script.google.com/macros/s/AKfycbwKWUNr3HAcZBmbuAr0YsvPmO49CTS4vfwNrYpFZ_9axZL_gsGfUp_MWufTHsOePX_0/exec";
   const OG_IMG     = "https://paisa-bada.github.io/assets/win-card-500.jpg"; /* win card image URL */
 </script>
   
@@ -412,8 +412,8 @@ function showRetryToast(){
 function openPopup(){document.getElementById('popupForm').style.display='flex';}
 function closePopup(){document.getElementById('popupForm').style.display='none';}
 function isTenDigits(s){return /^\d{10}$/.test((s||'').trim());}
-function openShare(text,phone=null){
-  const base=phone?`https://wa.me/91${phone}?text=`:`https://wa.me/?text=`;
+function openShare(text,mobile=null){
+  const base=mobile?`https://wa.me/91${mobile}?text=`:`https://wa.me/?text=`;
   window.open(base+encodeURIComponent(text),'_blank');
 }
 
@@ -464,7 +464,7 @@ document.getElementById('submitBtn').addEventListener('click',()=>{
   const user = {
     name: document.querySelector('#name')?.value?.trim() || '',
     email: document.querySelector('#email')?.value?.trim() || '',
-    phone: document.querySelector('#phone')?.value?.trim() || ''
+    mobile: document.querySelector('#mobile')?.value?.trim() || ''
   };
   const prizeText = window.currentPrizeText || '₹500 SIP';
   pbOnThankYou(user, prizeText);
@@ -1098,7 +1098,7 @@ async function notifyTeam(user, prizeText){
     <p><b>Prize:</b> ${escapeHtml(prizeText)}</p>
     <p><b>Name:</b> ${escapeHtml(user?.name || 'N/A')}</p>
     <p><b>Email:</b> ${escapeHtml(user?.email || 'N/A')}</p>
-    <p><b>Phone:</b> ${escapeHtml(user?.phone || 'N/A')}</p>
+    <p><b>mobile:</b> ${escapeHtml(user?.mobile || 'N/A')}</p>
     <p><b>Time:</b> ${pbNowISO()}</p>
     <p><b>Page:</b> ${escapeHtml(location.href)}</p>
     <p><b>UA:</b> ${escapeHtml(navigator.userAgent)}</p>`;
