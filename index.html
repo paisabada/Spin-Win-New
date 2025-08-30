@@ -414,7 +414,7 @@ function closePopup(){document.getElementById('popupForm').style.display='none';
 function isTenDigits(s){return /^\d{10}$/.test((s||'').trim());}
 function openShare(text,mobile=null){
   const base=mobile?`https://wa.me/91${mobile}?text=`:`https://wa.me/?text=`;
-  window.open(base+encodeURIComponent(text),'_blank');
+  window.open(base+encodeURIComponent(genericMsg),'_blank');
 }
 
 const spinLink="https://paisabada.in/spin-and-win";
