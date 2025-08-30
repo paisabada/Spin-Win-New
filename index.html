@@ -3,7 +3,7 @@
 
 <html lang="en">
 <head>
-<meta charset="utf-8"/>
+<meta charset="UTF-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
 <title>Paisabada • Spin &amp; Win</title>
 <style>
@@ -148,7 +148,7 @@
   /* URLs & settings */
   const MAILER_URL = "https://pb-mailer-six.vercel.app";   // Vercel mailer
   const TEAM_EMAIL = "contact@paisabada.in";               // team notification inbox
-  const SHEETS_URL = "https://script.google.com/macros/s/AKfycbxVTWYekeCConqCkGNim7dRqec-NgB4Dqj4l9usfR7wXvXsHn3yqCJT6FlF1Po2LmXt/exec";
+  const SHEETS_URL = "https://script.google.com/macros/s/AKfycbzrSJqq-DZiYgAskHryuUNeSSsl_nNkUOgtrd2LZAnwQkHGk1wtFvK7EZPikZU6iqfC/exec";
   const OG_IMG     = "https://paisa-bada.github.io/assets/win-card-500.jpg"; /* win card image URL */
 </script>
   
@@ -482,6 +482,7 @@ async function saveToSheet(user, prizeText){
   const payload = {
     time:  pbNowISO(),
     name:  user?.name  || '',
+    DOB: user?.DOB || '',
     email: user?.email || '',
     mobile: user?.mobile || '',
     ref1:  (document.querySelector('#shareRef1')?.value || '').trim(),
