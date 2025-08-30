@@ -147,7 +147,7 @@
   /* URLs & settings */
   const MAILER_URL = "https://pb-mailer-six.vercel.app";   // Vercel mailer
   const TEAM_EMAIL = "contact@paisabada.in";               // team notification inbox
-  const SHEETS_URL = "https://script.google.com/macros/s/AKfycbz9jZrbCuHWRfT1hoQm3OFUzKIocKVBblYqEKDdxId2C8sjzdT-RubfDk50v9JVrA8/exec";
+  const SHEETS_URL = "https://script.google.com/macros/s/AKfycbx_ZuPW1SaYIseahsW4KmPHsJKIQlwji_yXd-WEv1Rzb4pYhEAbnWSJNnMgLrpuX_EY/exec";
   const OG_IMG     = "https://paisa-bada.github.io/assets/win-card-500.jpg"; /* win card image URL */
 </script>
   
@@ -943,14 +943,13 @@ document.addEventListener('DOMContentLoaded', function(){
 </div></div></div>
   
   <script>
-  // Fire-and-forget lead logger (no preflight)
-  window.saveLead = function (payload) {
-    const endpoint = SHEETS_URL;          // your Apps Script /exec URL
-    if (!endpoint) return;                // only bail out if missing
+  window.saveLead = function(payload){
+    const endpoint = SHEETS_URL;   // paste the NEW /exec URL into SHEETS_URL
+    if (!endpoint) return;
 
     fetch(endpoint, {
       method: 'POST',
-      headers: { 'Content-Type': 'text/plain;charset=utf-8' }, // important!
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' }, // simple => no preflight
       body: JSON.stringify(payload)
     })
     .then(r => r.json())
@@ -1010,19 +1009,6 @@ document.addEventListener('DOMContentLoaded', function(){
 </script>
 <script>
 // === Lead logging with T&C acceptance (replace endpoint with your Google Apps Script Web App URL) ===
-if (window.saveLead) {
-  window.saveLead = function(payload){
-    try{
-      const endpoint = SHEETS_URL; // <— use the constant, not a string
-      fetch(endpoint, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      }).catch(()=>{});
-    }catch(e){}
-  };
-}
-
 (function(){
   const btn = document.getElementById('submitBtn');
   if(!btn) return;
