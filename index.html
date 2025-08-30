@@ -147,7 +147,7 @@
   /* URLs & settings */
   const MAILER_URL = "https://pb-mailer-six.vercel.app";   // Vercel mailer
   const TEAM_EMAIL = "contact@paisabada.in";               // team notification inbox
-  const SHEETS_URL = "https://script.google.com/macros/s/AKfycbwKWUNr3HAcZBmbuAr0YsvPmO49CTS4vfwNrYpFZ_9axZL_gsGfUp_MWufTHsOePX_0/exec";
+  const SHEETS_URL = "https://script.google.com/macros/s/AKfycbxVTWYekeCConqCkGNim7dRqec-NgB4Dqj4l9usfR7wXvXsHn3yqCJT6FlF1Po2LmXt/exec";
   const OG_IMG     = "https://paisa-bada.github.io/assets/win-card-500.jpg"; /* win card image URL */
 </script>
   
@@ -487,7 +487,10 @@ async function saveToSheet(user, prizeText){
     ref2:  (document.querySelector('#shareRef2')?.value || '').trim(),
     prize: prizeText,
     page:  location.href,
-    ua:    navigator.userAgent
+    ua:    navigator.userAgent,
+    consent: consent ? "YES" : "NO",
+    consentTime: consent ? new
+    Date().toISOString() : "",
   };
 
   // IMPORTANT: text/plain to avoid CORS preflight
