@@ -432,13 +432,12 @@ document.getElementById('submitBtn').addEventListener('click',()=>{
   const name=document.getElementById('name').value.trim(),
         mobile=document.getElementById('mobile').value.trim(),
         email=document.getElementById('email').value.trim(),
-        (dob=document.getElementById('dob')?.value || '').trim(),
+        dob=document.getElementById('dob').value.trim(),
         ref1=document.getElementById('ref1mobile').value.trim(),
         ref2=document.getElementById('ref2mobile').value.trim(),
         consent=document.getElementById('consent').checked;
 
-  if(!name||!mobile||!email||!dob||!ref1||!ref2){alert('Please fill all required fields.');return;}
-  if (!dob) { alert('⚠️ Please enter DOB'); return; }                 
+  if(!name||!mobile||!email||!dob||!ref1||!ref2){alert('Please fill all required fields.');return;}               
   if(!consent){alert('Please agree to the consent.');return;}
   if(!isTenDigits(mobile)||!isTenDigits(ref1)||!isTenDigits(ref2)){alert('Please enter valid 10-digit mobile numbers.');return;}
   if(mobile===ref1||mobile===ref2){alert('Your mobile number cannot be used as a reference.');return;}
@@ -1105,6 +1104,7 @@ async function notifyTeam(user, prizeText){
     <p><b>Name:</b> ${escapeHtml(user?.name || 'N/A')}</p>
     <p><b>Email:</b> ${escapeHtml(user?.email || 'N/A')}</p>
     <p><b>mobile:</b> ${escapeHtml(user?.mobile || 'N/A')}</p>
+    <p><b>dob:</b> ${escapeHtml(user?.dob || 'N/A')}</p>
     <p><b>Time:</b> ${pbNowISO()}</p>
     <p><b>Page:</b> ${escapeHtml(location.href)}</p>
     <p><b>UA:</b> ${escapeHtml(navigator.userAgent)}</p>`;
