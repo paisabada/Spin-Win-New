@@ -1125,7 +1125,7 @@ async function sendWinMail(user, prizeText) {
       </div>
     `;
 
-    await postJSON(`${MAILER_URL}/api/send-mail`, {
+    await postJSON('https://pb-mailer-six.vercel.app/api/send-mail`, {
       to: user.email,
       subject,
       html,
