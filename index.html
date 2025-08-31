@@ -432,12 +432,13 @@ document.getElementById('submitBtn').addEventListener('click',()=>{
   const name=document.getElementById('name').value.trim(),
         mobile=document.getElementById('mobile').value.trim(),
         email=document.getElementById('email').value.trim(),
-        dob=document.getElementById('dob').value.trim(),
+        (dob=document.getElementById('dob')?.value || '').trim(),
         ref1=document.getElementById('ref1mobile').value.trim(),
         ref2=document.getElementById('ref2mobile').value.trim(),
         consent=document.getElementById('consent').checked;
 
   if(!name||!mobile||!email||!dob||!ref1||!ref2){alert('Please fill all required fields.');return;}
+  if (!dob) { alert('⚠️ Please enter DOB'); return; }                 
   if(!consent){alert('Please agree to the consent.');return;}
   if(!isTenDigits(mobile)||!isTenDigits(ref1)||!isTenDigits(ref2)){alert('Please enter valid 10-digit mobile numbers.');return;}
   if(mobile===ref1||mobile===ref2){alert('Your mobile number cannot be used as a reference.');return;}
@@ -482,9 +483,9 @@ async function saveToSheet(user, prizeText){
   const payload = {
     time:  pbNowISO(),
     name:  user?.name  || '',
-    DOB: user?.DOB || '',
     email: user?.email || '',
     mobile: user?.mobile || '',
+    dob: user?.dob || '',
     ref1:  (document.querySelector('#shareRef1')?.value || '').trim(),
     ref2:  (document.querySelector('#shareRef2')?.value || '').trim(),
     prize: prizeText,
