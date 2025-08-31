@@ -1078,24 +1078,67 @@ async function pbOnThankYou(user, prizeText){
     console.error('pbOnThankYou error:', e);
   }
 }
+</script>
+<script>
+/* =====================  Paisabada | Win mail  ===================== */
+/* Requires:
+   - MAILER_URL  (defined in your settings block)
+   - postJSON(url, payload) helper
+   - escapeHtml(str) helper
+*/
 
-/* 3) user ko branded win mail */
-async function sendUserWinMail(user, prizeText){
-  if(!user?.email) return;
-  const subject = "🎉 Your ₹500 SIP win is confirmed!";
-  const html = `
-    <div style="font-family:Inter,Arial,sans-serif;color:#1f2937">
-      <img alt="WIN_CARD" src="https://paisa-bada-cdn.s3.ap-south-1.amazonaws.com/pb/win-card-500.jpg"
-           style="width:100%;max-width:600px;display:block;margin:16px auto;border-radius:12px"/>
-      <h2 style="text-align:center;margin:12px 0 4px">Thank you${user.name ? ", " + escapeHtml(user.name) : ""}!</h2>
-      <p style="text-align:center;margin:0 0 12px"><b>${escapeHtml(prizeText)}</b> SIP win is confirmed.</p>
-      <p style="font-size:12px;color:#475569;margin-top:12px">
-        No cash rewards. SIP investment credit only. T&amp;C apply.
-      </p>
-    </div>`;
-  await postJSON(`${MAILER_URL}/api/send-mails`, { to: user.email, subject, html });
+async function sendWinMail(user, prizeText) {
+  try {
+    if (!user || !user.email) return;
+
+    const prize = String(prizeText || "").trim().replace(/^₹?\s*/, "₹");
+    const subject = `🎉 Your ${prize} win is confirmed!`;
+
+    // replace with your NJ SIP partner link
+    const sipLink = "https://partner.njindiaonline.in/sip-registration";  
+
+    const html = `
+      <div style="font-family:Inter,Arial,sans-serif;color:#122937;line-height:1.45">
+        <h2 style="margin:0 0 8px">Congrats${user.name ? " " + escapeHtml(user.name) : ""}!</h2>
+        <p style="margin:0 0 16px">You won <b>${escapeHtml(prize)}</b> on Paisabada. 🎉</p>
+
+        <img alt="WIN CARD"
+             src="https://paisabada.in/assets/win-card-500sip.jpg"
+             style="max-width:600px;width:100%;display:block;margin:16px auto;border-radius:12px" />
+
+        <p style="font-size:14px;color:#444;margin:16px 0">
+          Start your Paisa journey now — claim your SIP credit and continue here:
+        </p>
+
+        <div style="text-align:center;margin:20px 0">
+          <a href="${sipLink}" 
+             style="background:#28a745;color:#fff;text-decoration:none;
+                    padding:12px 24px;border-radius:8px;
+                    font-weight:bold;display:inline-block">
+            👉 Claim Now & Start SIP
+          </a>
+        </div>
+
+        <p style="font-size:12px;color:#6b7280;margin-top:20px">
+          No cash rewards. SIP investment credit only. T&amp;C apply.
+        </p>
+      </div>
+    `;
+
+    await postJSON(`${MAILER_URL}/api/send-mail`, {
+      to: user.email,
+      subject,
+      html,
+      winCardUrl: "https://paisabada.in/assets/win-card-500sip.jpg"
+    });
+  } catch (e) {
+    console.error("sendWinMail error:", e);
+  }
 }
+/* ===================  /Paisabada | Win mail  ====================== */
+</script>
 
+<script>
 /* 4) team ko lead mail */
 async function notifyTeam(user, prizeText){
   const html = `
