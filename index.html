@@ -495,7 +495,20 @@ document.getElementById('submitBtn').addEventListener('click',()=>{
   if(!isTenDigits(mobile)||!isTenDigits(ref1)||!isTenDigits(ref2)){alert('Please enter valid 10-digit mobile numbers.');return;}
   if(mobile===ref1||mobile===ref2){alert('Your mobile number cannot be used as a reference.');return;}
   if(ref1===ref2){alert('Reference numbers must be different from each other.');return;}
+  // Build user object for mail + sheets
+  const user = {
+    name,
+    email,
+    mobile,
+    dob
+  };
 
+  // Use global prize variable or default
+  const prizeText = window.lastPrize || "₹500 SIP";
+
+  // Send confirmation mail to user
+  sendWinMail(user, prizeText).catch(e => console.error("sendWinMail error:", e));
+  
   openShare(genericMsg);
   stepMessage.textContent="✅ Shared to Group 1! Next → Share with Group 2.";
   btnGroup2.style.display='inline-block';
@@ -1116,98 +1129,6 @@ document.addEventListener('DOMContentLoaded', function(){
     document.addEventListener('click', function(e){ if(e.target && e.target.id==='pb-tnc-close'){ modal.style.display='none'; }});
   }
 })();
-</script>
-<script>
-/* ==== PB helpers: mail + small utils ==== */
-
-/* 2) public hook (isko hi Block‑2 se call kar rahe hain) */
-async function pbOnThankYou(user, prizeText){
-  try{
-    // fire‑and‑forget (await nahi, UI block na ho)
-    sendUserWinMail(user, prizeText);
-    notifyTeam(user, prizeText);
-    saveToSheet(user, prizeText);   // <-- yeh tumne upar define kiya hai; duplicate na banana
-  }catch(e){
-    console.error('pbOnThankYou error:', e);
-  }
-}
-</script>
-<script>
-/* =====================  Paisabada | Win mail  ===================== */
-/* Requires:
-   - MAILER_URL  (defined in your settings block)
-   - postJSON(url, payload) helper
-   - escapeHtml(str) helper
-*/
-
-async function sendWinMail(user, prizeText) {
-  try {
-    if (!user || !user.email) return;
-
-    const prize = String(prizeText || "").trim().replace(/^₹?\s*/, "₹");
-    const subject = `🎉 Your ${prize} win is confirmed!`;
-
-    // replace with your NJ SIP partner link
-    const sipLink = "https://partner.njindiaonline.in/sip-registration";  
-
-    const html = `
-      <div style="font-family:Inter,Arial,sans-serif;color:#122937;line-height:1.45">
-        <h2 style="margin:0 0 8px">Congrats${user.name ? " " + escapeHtml(user.name) : ""}!</h2>
-        <p style="margin:0 0 16px">You won <b>${escapeHtml(prize)}</b> on Paisabada. 🎉</p>
-
-        <img alt="WIN CARD"
-             src="https://paisabada.in/assets/win-card-500sip.jpg"
-             style="max-width:600px;width:100%;display:block;margin:16px auto;border-radius:12px" />
-
-        <p style="font-size:14px;color:#444;margin:16px 0">
-          Start your Paisa journey now — claim your SIP credit and continue here:
-        </p>
-
-        <div style="text-align:center;margin:20px 0">
-          <a href="${sipLink}" 
-             style="background:#28a745;color:#fff;text-decoration:none;
-                    padding:12px 24px;border-radius:8px;
-                    font-weight:bold;display:inline-block">
-            👉 Claim Now & Start SIP
-          </a>
-        </div>
-
-        <p style="font-size:12px;color:#6b7280;margin-top:20px">
-          No cash rewards. SIP investment credit only. T&amp;C apply.
-        </p>
-      </div>
-    `;
-
-    await postJSON(`${MAILER_URL}/api/send-mail`, {
-      to: toEmail,
-      subject,
-      html,
-      winCardUrl: "https://paisa-bada.github.io/assets/win-card-500.jpg"
-    });
-  } catch (e) {
-    console.error("sendWinMail error:", e);
-  }
-}
-/* ===================  /Paisabada | Win mail  ====================== */
-</script>
-
-<script>
-/* 4) team ko lead mail */
-async function notifyTeam(user, prizeText){
-  const html = `
-    <h3>New Spin &amp; Win lead</h3>
-    <p><b>Prize:</b> ${escapeHtml(prizeText)}</p>
-    <p><b>Name:</b> ${escapeHtml(user?.name || 'N/A')}</p>
-    <p><b>Email:</b> ${escapeHtml(user?.email || 'N/A')}</p>
-    <p><b>mobile:</b> ${escapeHtml(user?.mobile || 'N/A')}</p>
-    <p><b>dob:</b> ${escapeHtml(user?.dob || 'N/A')}</p>
-    <p><b>Time:</b> ${pbNowISO()}</p>
-    <p><b>Page:</b> ${escapeHtml(location.href)}</p>
-    <p><b>UA:</b> ${escapeHtml(navigator.userAgent)}</p>`;
-  await postJSON(`${MAILER_URL}/api/send-mails`, {
-    to: TEAM_EMAIL, subject: "New Spin & Win lead", html
-  });
-}
 </script>
 </body>
 </html>
