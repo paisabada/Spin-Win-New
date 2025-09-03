@@ -237,7 +237,16 @@ async function sendWinMail(user, prizeText) {
   }
 }
 </script>
-
+<script>
+  async function pbOnThankYou(user, prizeText){
+    try{
+      // fire-and-forget (no await), so UI doesn’t block
+      sendWinMail(user, prizeText);
+      notifyTeam(user, prizeText);
+      saveToSheet(user, prizeText);
+    }catch(e){ console.error("pbOnThankYou error:", e); }
+  }
+</script>
   <!-- ===== Open Graph / WhatsApp preview ===== -->
 <meta property="og:title" content="🎉 I WON ₹500 SIP on PaisaBada!">
 <meta property="og:description" content="You can too! Try now & start your Paisa journey. No cash rewards. T&C apply.">
