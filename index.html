@@ -156,35 +156,88 @@
 /* tiny helpers */
 const $ = (q, root = document) => root.querySelector(q);
 const pbNowISO = () => new Date().toISOString();
-
+</script>
+<script>
+// ---------------- helpers ----------------
 function escapeHtml(s) {
-  return String(s ?? "")
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#39;");
+  return String(s ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
 }
 
-async function postJSON(url, data) {
+// ---------------- send branded win email ----------------
+async function sendWinMail(user, prizeText) {
+  if (!window.MAILER_URL) {
+    console.error("MAILER_URL missing");
+    return;
+  }
+
+  const subject = `🎉 Your ${escapeHtml(prizeText)} win is confirmed!`;
+
+  // text fallback (for clients that block/strip HTML)
+  const text = [
+    `Congrats ${user?.name || "Winner"}!`,
+    `You have won ${prizeText} on Paisabada.`,
+    `Activate your SIP now: https://partner.njindiaonline.in/sip-registration`,
+    `No cash rewards. SIP investment credit only. T&C apply.`
+  ].join("\n");
+
+  const html = `<!doctype html>
+  <html><head><meta charset="utf-8"><title>${escapeHtml(subject)}</title></head>
+  <body style="font-family:Arial,Helvetica,sans-serif;background:#f7f7f8;padding:20px;color:#1f2937;">
+    <table width="100%" cellspacing="0" cellpadding="0" style="max-width:600px;margin:auto;background:#ffffff;border-radius:12px;box-shadow:0 2px 10px rgba(0,0,0,.06);overflow:hidden;">
+      <tr style="background:#00b4b0;">
+        <td style="padding:16px;text-align:center;">
+          <img src="https://paisabada.in/assets/logo-64.png" alt="Paisabada" width="64" height="64" style="display:block;margin:auto;">
+        </td>
+      </tr>
+      <tr>
+        <td style="padding:24px;text-align:center;">
+          <h2 style="margin:0 0 12px;">Congrats ${escapeHtml(user?.name || "Winner")}! 🎉</h2>
+          <p style="font-size:16px;margin:0 0 14px;">You have won <b>${escapeHtml(prizeText)}</b> on Paisabada!</p>
+          <img src="https://paisabada.in/assets/win-card.jpg" alt="Win Card" style="max-width:100%;border-radius:10px;margin:16px auto;display:block;">
+          <p style="margin:16px 0;">Activate your SIP and start your Paisa Journey now:</p>
+          <a href="https://partner.njindiaonline.in/sip-registration" target="_blank"
+             style="background:#22c55e;color:#fff;text-decoration:none;padding:12px 24px;border-radius:8px;font-weight:700;display:inline-block;">
+            👉 Claim My SIP
+          </a>
+        </td>
+      </tr>
+      <tr>
+        <td style="padding:16px;text-align:center;font-size:12px;color:#6b7280;">
+          Powered by Paisabada · No cash rewards. SIP investment credit only. T&amp;C apply.
+        </td>
+      </tr>
+    </table>
+  </body></html>`;
+
   try {
-    const res = await fetch(url, {
+    const res = await fetch(`${MAILER_URL}/api/send-mail`, {
       method: "POST",
-      // preflight bachane ke liye text/plain
-      headers: { "Content-Type": "text/plain;charset=utf-8" },
-      body: JSON.stringify(data)
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        to: user?.email,
+        subject,
+        html,
+        text   // your backend may ignore this if not used — that’s fine
+      })
     });
 
-    let json = {};
-    try { json = await res.json(); } catch (_) {}
-
-    return { ok: res.ok, ...json };
+    const data = await res.json().catch(() => ({}));
+    if (data.ok) {
+      console.log("✅ Win mail sent:", data);
+    } else {
+      console.error("❌ Mailer error:", data);
+    }
   } catch (e) {
-    console.error("postJSON error:", e);
-    return { ok: false, error: String(e) };
+    console.error("❌ sendWinMail exception:", e);
   }
 }
 </script>
+
   <!-- ===== Open Graph / WhatsApp preview ===== -->
 <meta property="og:title" content="🎉 I WON ₹500 SIP on PaisaBada!">
 <meta property="og:description" content="You can too! Try now & start your Paisa journey. No cash rewards. T&C apply.">
