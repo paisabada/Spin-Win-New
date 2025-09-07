@@ -170,14 +170,14 @@ function escapeHtml(s) {
 
 // ---------------- send branded win email ----------------
 async function sendWinMail(user, prizeText) {
-  const subject = `🎉 Your ${prizeText} SIP win is confirmed!`;
+  const subject = `🎉 बधाई हो! आपने ${prizeText} जीता! अभी Claim करें `;
 
   const html = `
     <h2 style="font-family:Inter,Arial,sans-serif;color:#12a937;margin:0 0 12px">
       Congrats ${escapeHtml(user.name)}! 🎉
     </h2>
     <p style="margin:0 0 12px">You won <b>${escapeHtml(prizeText)}</b> SIP Credit.</p>
-    <img alt="WIN CARD" src="https://paisa-bada.github.io/assets/win-card-500.jpg"
+    <img alt="WIN CARD" src="https://paisa-bada.github.io/assets/Badhai Ho Card.jpg"
          style="max-width:600px;width:100%;display:block;margin:16px auto;border-radius:12px" />
     <p style="margin:16px 0">
       <a href="https://partner-link-to-sip-registration.com"
