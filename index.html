@@ -1152,5 +1152,97 @@ document.addEventListener('DOMContentLoaded', function(){
   }
 })();
 </script>
+  <!-- ====== Paste START: WhatsApp send frontend (put before </body>) ====== -->
+<!-- Add opt-in checkbox near your form inputs if not present -->
+<!-- Ensure you have inputs with id="name" and id="mobile" and a submit button with id="submitBtn" -->
+
+<script>
+/* ---------- Helper & Validation ---------- */
+function cleanPhoneRaw(input) {
+  if (!input) return "";
+  let s = String(input).trim();
+  s = s.replace(/\s+/g, '').replace(/[^0-9+]/g, '');
+  s = s.replace(/^0+/, ''); // remove leading zeros
+  if (!s.startsWith('+')) s = '+91' + s; // default to +91
+  return s;
+}
+function isValidIndianE164(p) {
+  if (!p) return false;
+  const only = p.replace('+','');
+  return /^91[6-9]\d{9}$/.test(only);
+}
+function buildWinMessage(name) {
+  return `🎉 बधाई हो ${name ? name + "!" : "!"} आपने ₹500 SIP जीत लिया है!\n\n` +
+         `👉 अपना SIP claim करने के लिए इस लिंक पर क्लिक करें: https://paisabada.in/spin-claim\n\n` +
+         `Team Paisabada`;
+}
+
+/* ---------- Main handler: calls your backend endpoint ---------- */
+document.addEventListener('DOMContentLoaded', function(){
+  const nameInput = document.querySelector('#name');
+  const mobileInput = document.querySelector('#mobile');
+  const submitBtn = document.querySelector('#submitBtn');
+
+  if (!submitBtn) return console.warn('submitBtn not found. Paste correct ID or add button with id="submitBtn".');
+
+  submitBtn.addEventListener('click', async function(evt){
+    evt.preventDefault && evt.preventDefault();
+
+    const rawPhone = mobileInput ? mobileInput.value : '';
+    const nameVal = nameInput ? nameInput.value.trim() : '';
+
+    if (!rawPhone) { alert('कृपया मोबाइल नंबर भरें'); return; }
+    // optional: ensure user gave opt-in; if you have a checkbox, check it here.
+    // const opted = document.querySelector('#waOptin') ? document.querySelector('#waOptin').checked : true;
+    // if (!opted) { alert('कृपया WhatsApp अपडेट के लिए सहमति दें'); return; }
+
+    const phone = cleanPhoneRaw(rawPhone);
+    if (!isValidIndianE164(phone)) {
+      const cont = confirm('यह नंबर संभवतः भारतीय मोबाइल नंबर नहीं है। आगे बढ़ना है क्या?');
+      if (!cont) return;
+    }
+
+    // request payload
+    const payload = {
+      name: nameVal,
+      phone: phone,
+      message: buildWinMessage(nameVal),
+      source: 'spin-win-frontend'
+    };
+
+    submitBtn.disabled = true;
+    const prevText = submitBtn.innerText;
+    submitBtn.innerText = 'Sending...';
+
+    try {
+      // If backend hosted elsewhere, change '/api/send-whatchimp' to full URL like 'https://api.example.com/api/send-whatchimp'
+      const resp = await fetch('/api/send-whatchimp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+
+      const j = await resp.json().catch(()=>({}));
+      if (resp.ok && j.success) {
+        // success UI
+        alert('Message sent! Check your WhatsApp.');
+        // you can show your thankyou div instead of alert:
+        const t = document.querySelector('#thankyou');
+        if (t) { t.style.display = 'block'; }
+      } else {
+        console.warn('Server error:', j);
+        alert('Message send failed. Try again or contact admin.');
+      }
+    } catch (err) {
+      console.error('Network or unexpected error', err);
+      alert('Network error while sending message.');
+    } finally {
+      submitBtn.disabled = false;
+      submitBtn.innerText = prevText;
+    }
+  });
+});
+</script>
+<!-- ====== Paste END ====== -->
 </body>
 </html>
