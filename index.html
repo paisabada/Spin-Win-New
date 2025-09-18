@@ -1152,91 +1152,73 @@ document.addEventListener('DOMContentLoaded', function(){
   }
 })();
 </script>
-  <!-- WhatsApp send (paste before </body>) -->
+  
 <script>
-(function(){
-  const VERCEL_API = "https://spin-whatsapp-backend.vercel.app/api/send-whatsapp"; // <- UPDATE
+// ================= WhatsApp Integration Block ===================
 
-  function cleanPhoneRaw(input) {
-    if (!input) return "";
-    let s = String(input).trim();
-    s = s.replace(/\s+/g, "").replace(/[^0-9+]/g, "");
-    if (!s.startsWith("+")) s = "+91" + s;
-    return s;
+// normalise number: auto-add +91 for 10-digit inputs
+function cleanPhoneRaw(input) {
+  if (!input) return "";
+  let s = String(input).trim();
+  s = s.replace(/\s+/g, "").replace(/[^+\d]/g, "");
+  if (s.startsWith("0")) s = s.replace(/^0+/, "");
+  const digits = s.replace(/\D/g, "");
+  if (digits.length === 10) return "+91" + digits;
+  if (!s.startsWith("+") && digits.length > 0) return "+" + digits;
+  return s;
+}
+
+function isValidIndianE164(phone) {
+  return /^\+91[6-9]\d{9}$/.test(phone);
+}
+
+async function sendWhatsAppMessage(user) {
+  try {
+    const resp = await fetch("/api/send-whatsapp", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(user),
+    });
+    const data = await resp.json();
+    console.log("WhatsApp API response:", data);
+  } catch (err) {
+    console.error("WhatsApp send error:", err);
+  }
+}
+
+// Hook your form submit
+document.addEventListener("DOMContentLoaded", function () {
+  const submitBtn = document.querySelector("#submitBtn");
+  if (!submitBtn) {
+    console.warn("submitBtn not found. Check element id.");
+    return;
   }
 
-  function isValidIndianE164(p) {
-    if (!p) return false;
-    const only = p.replace(/^\+/, '');
-    return /^[6-9]\d{9}$/.test(only);
-  }
+  submitBtn.addEventListener("click", function () {
+    const name = document.querySelector("#name").value.trim();
+    const mobileRaw = document.querySelector("#mobile").value;
+    const dob = document.querySelector("#dob").value;
+    const email = document.querySelector("#email").value.trim();
+    const ref1 = document.querySelector("#ref1mobile").value.trim();
+    const ref2 = document.querySelector("#ref2mobile").value.trim();
+    const consent = document.querySelector("#consent").checked;
 
-  function buildWinMessage(name) {
-    // Adjust message text or keep minimal; backend may use template instead
-    return `🎉 Badhai ho ${name || ""}! Aapne ₹500 SIP jeeta hai. Activate karne ke liye reply karein ya click karein.`;
-  }
+    const phone = cleanPhoneRaw(mobileRaw);
+    if (!isValidIndianE164(phone)) {
+      alert("Please enter valid Indian 10-digit mobile.");
+      return;
+    }
 
-  document.addEventListener('DOMContentLoaded', function(){
-    const nameInput   = document.querySelector('#name');
-    const mobileInput = document.querySelector('#mobile');
-    const dobInput    = document.querySelector('#dob');
-    const emailInput  = document.querySelector('#email');
-    const ref1Input   = document.querySelector('#ref1');
-    const ref2Input   = document.querySelector('#ref2');
-    const consentBox  = document.querySelector('#consent');   // checkbox id
-    const submitBtn   = document.querySelector('#submitBtn'); // submit button id
+    const user = { phone, name, dob, email, ref1, ref2, consent };
 
-    if (!submitBtn) { console.warn('submitBtn not found, check selector'); return; }
-
-    submitBtn.addEventListener('click', async function(e){
-      try {
-        // do not block form submit; just run in background
-        const rawMobile = mobileInput ? mobileInput.value.trim() : "";
-        const clean = cleanPhoneRaw(rawMobile);
-
-        if (!isValidIndianE164(clean)) {
-          console.warn('Invalid mobile for WhatsApp send:', clean);
-          // let form validation handle showing to user; we don't block
-          return;
-        }
-
-        const payload = {
-          phone: clean,
-          name: nameInput ? nameInput.value.trim() : "",
-          dob: dobInput ? dobInput.value.trim() : "",
-          email: emailInput ? emailInput.value.trim() : "",
-          ref1: ref1Input ? ref1Input.value.trim() : "",
-          ref2: ref2Input ? ref2Input.value.trim() : "",
-          consent: consentBox ? !!consentBox.checked : false,
-          prize: "₹500 SIP",
-          // if your backend expects `variables` array for template:
-          variables: [ nameInput ? nameInput.value.trim() : "" ]
-        };
-
-        // call backend but do not await blocking the UI; still catch errors
-        fetch(VERCEL_API, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload)
-        })
-        .then(r => r.json().catch(()=>({raw:true})))
-        .then(data => {
-          console.log('WhatsApp API response:', data);
-          // optionally show a toast: "WhatsApp message queued"
-        })
-        .catch(err => {
-          console.error('WhatsApp send failed', err);
-        });
-
-        // let original form submit continue (if form triggers on click)
-        // do not call e.preventDefault() here unless you intentionally want to stop form
-      } catch (err) {
-        console.error(err);
-      }
-    }); // end event listener
+    // send to backend
+    sendWhatsAppMessage(user);
   });
-})();
+});
+
+// ================================================================
 </script>
+
 
 </body>
 </html>
