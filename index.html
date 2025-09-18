@@ -1152,150 +1152,88 @@ document.addEventListener('DOMContentLoaded', function(){
   }
 })();
 </script>
-  
+  <!-- WhatsApp send (paste before </body>) -->
 <script>
-/*
-  Ready-to-paste: Send WhatsApp on Activate form submit
-  Paste this ONLY once, before </body>.
-  Update API_ENDPOINT below if your backend URL differs.
-*/
-
 (function(){
-  const API_ENDPOINT = "https://spin-whatsapp-backend.vercel.app/api/send-whatsapp"; // <-- change if needed
+  const VERCEL_API = "https://spin-whatsapp-backend.vercel.app/api/send-whatsapp"; // <- UPDATE
 
-  // normalize phone to E.164, add +91 when country code missing
-  function normalizePhone(raw) {
-    if (!raw) return "";
-    let s = String(raw).trim();
-    // remove spaces, parentheses, dashes and letters except leading +
-    s = s.replace(/\s+/g, "").replace(/[^\d+]/g, "");
-    // remove leading zeros (e.g. 09876543210 -> 9876543210)
-    s = s.replace(/^0+/, '');
-    if (!s) {
-      return "";
-    }
-    // if starts with '+' keep; otherwise default to India +91
-    if (!s.startsWith('+')) {
-      s = '+91' + s;
-    }
+  function cleanPhoneRaw(input) {
+    if (!input) return "";
+    let s = String(input).trim();
+    s = s.replace(/\s+/g, "").replace(/[^0-9+]/g, "");
+    if (!s.startsWith("+")) s = "+91" + s;
     return s;
   }
 
-  function getVal(selector) {
-    const el = document.querySelector(selector);
-    return el ? (el.value || "").trim() : "";
+  function isValidIndianE164(p) {
+    if (!p) return false;
+    const only = p.replace(/^\+/, '');
+    return /^[6-9]\d{9}$/.test(only);
   }
 
-  async function sendToBackend(payload) {
-    try {
-      const r = await fetch(API_ENDPOINT, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
-      let parsed;
-      try { parsed = await r.json(); } catch(e) { parsed = { raw: await r.text() }; }
-      console.log("WhatsApp backend response:", parsed);
-      return parsed;
-    } catch (err) {
-      console.error("Error posting to WhatsApp backend:", err);
-      return null;
-    }
+  function buildWinMessage(name) {
+    // Adjust message text or keep minimal; backend may use template instead
+    return `🎉 Badhai ho ${name || ""}! Aapne ₹500 SIP jeeta hai. Activate karne ke liye reply karein ya click karein.`;
   }
 
-  document.addEventListener('DOMContentLoaded', function() {
-    // selectors from your form
-    const form = document.querySelector('#activateForm'); // if your form has an id
-    const submitBtn = document.querySelector('#submitBtn') || document.querySelector('button[type="submit"]');
+  document.addEventListener('DOMContentLoaded', function(){
+    const nameInput   = document.querySelector('#name');
+    const mobileInput = document.querySelector('#mobile');
+    const dobInput    = document.querySelector('#dob');
+    const emailInput  = document.querySelector('#email');
+    const ref1Input   = document.querySelector('#ref1');
+    const ref2Input   = document.querySelector('#ref2');
+    const consentBox  = document.querySelector('#consent');   // checkbox id
+    const submitBtn   = document.querySelector('#submitBtn'); // submit button id
 
-    // fallback: if no submitBtn found, try to find the green button by text
-    let btn = submitBtn;
-    if (!btn) {
-      const allButtons = Array.from(document.querySelectorAll('button'));
-      btn = allButtons.find(b => /submit|start sharing|activate/i.test(b.innerText)) || null;
-    }
+    if (!submitBtn) { console.warn('submitBtn not found, check selector'); return; }
 
-    // Handler
-    let isProcessing = false;
-    async function handleSubmit(e) {
-      // prevent normal navigation so backend call happens first
-      if (e && e.preventDefault) e.preventDefault();
+    submitBtn.addEventListener('click', async function(e){
+      try {
+        // do not block form submit; just run in background
+        const rawMobile = mobileInput ? mobileInput.value.trim() : "";
+        const clean = cleanPhoneRaw(rawMobile);
 
-      if (isProcessing) {
-        console.log("Already processing, ignoring duplicate submit.");
-        return;
+        if (!isValidIndianE164(clean)) {
+          console.warn('Invalid mobile for WhatsApp send:', clean);
+          // let form validation handle showing to user; we don't block
+          return;
+        }
+
+        const payload = {
+          phone: clean,
+          name: nameInput ? nameInput.value.trim() : "",
+          dob: dobInput ? dobInput.value.trim() : "",
+          email: emailInput ? emailInput.value.trim() : "",
+          ref1: ref1Input ? ref1Input.value.trim() : "",
+          ref2: ref2Input ? ref2Input.value.trim() : "",
+          consent: consentBox ? !!consentBox.checked : false,
+          prize: "₹500 SIP",
+          // if your backend expects `variables` array for template:
+          variables: [ nameInput ? nameInput.value.trim() : "" ]
+        };
+
+        // call backend but do not await blocking the UI; still catch errors
+        fetch(VERCEL_API, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        })
+        .then(r => r.json().catch(()=>({raw:true})))
+        .then(data => {
+          console.log('WhatsApp API response:', data);
+          // optionally show a toast: "WhatsApp message queued"
+        })
+        .catch(err => {
+          console.error('WhatsApp send failed', err);
+        });
+
+        // let original form submit continue (if form triggers on click)
+        // do not call e.preventDefault() here unless you intentionally want to stop form
+      } catch (err) {
+        console.error(err);
       }
-
-      // read values - change selectors here if your input IDs differ
-      const name  = getVal('#name');
-      const dob   = getVal('#dob');        // format as present in form
-      const rawMobile = getVal('#mobile'); // user-supplied number, may miss country code
-      const email = getVal('#email');
-      const ref1  = getVal('#ref1');       // reference 1 mobile or contact
-      const ref2  = getVal('#ref2');       // reference 2 mobile or contact
-
-      // minimal mobile validation
-      if (!rawMobile) {
-        console.warn("Mobile is empty — skipping WhatsApp send.");
-        return; // let form still proceed if this is allowed by UX
-      }
-
-      const phone = normalizePhone(rawMobile);
-      if (!phone) {
-        console.warn("Normalized phone empty, skipping WhatsApp send.");
-        return;
-      }
-
-      // prepare payload for backend (adjust keys if backend expects different names)
-      const payload = {
-        phone,     // e.g. +919123456789
-        name,
-        dob,
-        email,
-        ref1,
-        ref2,
-        source: "spin_and_win"
-      };
-
-      // disable button and lock
-      isProcessing = true;
-      if (btn) btn.disabled = true;
-
-      // send request (fire and forget style, but we log response)
-      await sendToBackend(payload);
-
-      // unlock after small delay so user cannot spam
-      setTimeout(() => {
-        isProcessing = false;
-        if (btn) btn.disabled = false;
-      }, 1500);
-
-      // If the form was present and ordinarily submits to a server,
-      // allow it to continue by calling form.submit AFTER sending backend.
-      // If you DO NOT want form to be submitted to another endpoint, comment the next block.
-      if (form) {
-        // small delay to allow network call to start (non-blocking)
-        setTimeout(()=> {
-          try { form.submit(); } catch(e) { console.warn("Could not auto-submit form:", e); }
-        }, 300);
-      }
-    }
-
-    // Attach handler to the actual form submit if form exists (preferred)
-    if (form) {
-      form.addEventListener('submit', handleSubmit);
-      console.log("WhatsApp submit hook attached to #activateForm");
-    }
-
-    // Also attach to button click if present (covers non-form flows)
-    if (btn) {
-      btn.addEventListener('click', handleSubmit);
-      console.log("WhatsApp click hook attached to submit button");
-    }
-
-    if (!form && !btn) {
-      console.warn("No form (#activateForm) or submit button found. Edit selectors in the script if needed.");
-    }
+    }); // end event listener
   });
 })();
 </script>
