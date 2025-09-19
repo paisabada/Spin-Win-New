@@ -1287,15 +1287,12 @@ document.addEventListener("DOMContentLoaded", function () {
     submitBtn.innerText = "Submit & Start Sharing";
 
     // inspect result
-    if (result && (result.ok || result.status === 0 || result.status === "0")) {
-      // success path (adjust according to your backend response shape)
-      console.log("Message successfully queued/sent:", result);
-      alert("Thanks! WhatsApp message will be sent shortly.");
-      // optionally continue your share flow / popup close / redirect
-    } else {
-      console.error("Send failed:", result);
-      alert("Could not send WhatsApp message. See console logs for details.");
-    }
+    if (result && (result.ok || result.status == 0 || result.status == "0")) {
+  console.log("✅ WhatsApp message successfully queued/sent:", result);
+  // yaha se directly WhatsApp share flow continue ho jayega
+} else {
+  console.error("❌ WhatsApp send failed:", result);
+}
   });
 });
 </script>
