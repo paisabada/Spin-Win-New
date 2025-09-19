@@ -1154,69 +1154,150 @@ document.addEventListener('DOMContentLoaded', function(){
 </script>
   
 <script>
-// ================= WhatsApp Integration Block ===================
+// -----------------------------
+// WhatsApp send helper (paste/replace this block)
+// -----------------------------
 
-// normalise number: auto-add +91 for 10-digit inputs
+/**
+ * Clean phone input:
+ * - strip spaces and non-digits (except +)
+ * - if exactly 10 digits -> prepend +91
+ * - remove leading zeros
+ */
 function cleanPhoneRaw(input) {
   if (!input) return "";
   let s = String(input).trim();
-  s = s.replace(/\s+/g, "").replace(/[^+\d]/g, "");
+  // remove all whitespace
+  s = s.replace(/\s+/g, "");
+  // remove any characters that are not digits or plus
+  s = s.replace(/[^+\d]/g, "");
+  // if starts with 0 remove leading zeros
   if (s.startsWith("0")) s = s.replace(/^0+/, "");
+  // extract digits only for length checks
   const digits = s.replace(/\D/g, "");
+  // if user typed 10 digits, assume India and prepend +91
   if (digits.length === 10) return "+91" + digits;
+  // if user typed digits and didn't include +, but length > 0 and not 10 (leave as-is)
   if (!s.startsWith("+") && digits.length > 0) return "+" + digits;
   return s;
 }
 
+/**
+ * Basic validator for Indian E.164 format
+ * Accepts +91XXXXXXXXXX (10 digits after 91). Returns true/false
+ */
 function isValidIndianE164(phone) {
+  if (!phone) return false;
   return /^\+91[6-9]\d{9}$/.test(phone);
 }
 
+/**
+ * Send to your Vercel backend endpoint.
+ * If your backend is on different domain (e.g. spin-whatsapp-backend.vercel.app),
+ * replace API_ENDPOINT accordingly below.
+ */
+const API_ENDPOINT = "https://spin-whatsapp-backend.vercel.app/api/send-whatsapp"; // OR "https://spin-whatsapp-backend.vercel.app/api/send-whatsapp"
+
 async function sendWhatsAppMessage(user) {
   try {
-    const resp = await fetch("/api/send-whatsapp", {
+    console.log("sendWhatsAppMessage payload:", user);
+
+    const resp = await fetch(API_ENDPOINT, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json"
+      },
       body: JSON.stringify(user),
+      // credentials: 'include' // only if you need cookies/auth; remove otherwise
     });
+
+    // if not ok, attempt to read text (helps debug HTML error pages)
+    if (!resp.ok) {
+      const txt = await resp.text().catch(() => "<no-body>");
+      console.error("WhatsApp API returned non-OK:", resp.status, resp.statusText, txt);
+      return { ok: false, status: resp.status, statusText: resp.statusText, raw: txt };
+    }
+
+    // try to parse JSON safely
+    const contentType = resp.headers.get("content-type") || "";
+    if (!contentType.includes("application/json")) {
+      // server returned something else — log it
+      const txt = await resp.text().catch(() => "<no-body>");
+      console.warn("WhatsApp API returned non-JSON but 200:", txt);
+      return { ok: true, raw: txt };
+    }
+
     const data = await resp.json();
     console.log("WhatsApp API response:", data);
+    return data;
+
   } catch (err) {
     console.error("WhatsApp send error:", err);
+    return { ok: false, error: String(err) };
   }
 }
 
-// Hook your form submit
+// -----------------------------
+// Hook form submit (replace your existing hook - ensure element IDs match your DOM)
+// -----------------------------
 document.addEventListener("DOMContentLoaded", function () {
-  const submitBtn = document.querySelector("#submitBtn");
+  const submitBtn = document.querySelector("#submitBtn"); // same id you have in DOM
   if (!submitBtn) {
-    console.warn("submitBtn not found. Check element id.");
+    console.warn("submitBtn not found - check element id");
     return;
   }
 
-  submitBtn.addEventListener("click", function () {
-    const name = document.querySelector("#name").value.trim();
-    const mobileRaw = document.querySelector("#mobile").value;
-    const dob = document.querySelector("#dob").value;
-    const email = document.querySelector("#email").value.trim();
-    const ref1 = document.querySelector("#ref1mobile").value.trim();
-    const ref2 = document.querySelector("#ref2mobile").value.trim();
-    const consent = document.querySelector("#consent").checked;
+  submitBtn.addEventListener("click", async function (ev) {
+    ev.preventDefault();
 
+    // read fields (update selectors to match your form)
+    const name = (document.querySelector("#name") || {}).value || "";
+    const dob = (document.querySelector("#dob") || {}).value || "";
+    const mobileRaw = (document.querySelector("#mobile") || {}).value || "";
+    const email = (document.querySelector("#email") || {}).value || "";
+    const ref1 = (document.querySelector("#ref1") || {}).value || "";
+    const ref2 = (document.querySelector("#ref2") || {}).value || "";
+
+    // clean + validate phone
     const phone = cleanPhoneRaw(mobileRaw);
     if (!isValidIndianE164(phone)) {
-      alert("Please enter valid Indian 10-digit mobile.");
+      alert("Please enter a valid 10-digit Indian mobile number.");
       return;
     }
 
-    const user = { phone, name, dob, email, ref1, ref2, consent };
+    // build user payload expected by backend
+    const userPayload = {
+      name: name.trim(),
+      dob: dob.trim(),
+      email: email.trim(),
+      phone: phone,    // already E.164 like +91XXXXXXXXXX
+      ref1: ref1.trim(),
+      ref2: ref2.trim(),
+      source: "spin_widget" // optional source label
+    };
 
-    // send to backend
-    sendWhatsAppMessage(user);
+    // UI feedback - disable button while sending (optional)
+    submitBtn.disabled = true;
+    submitBtn.innerText = "Sending...";
+
+    const result = await sendWhatsAppMessage(userPayload);
+
+    // re-enable button and show result
+    submitBtn.disabled = false;
+    submitBtn.innerText = "Submit & Start Sharing";
+
+    // inspect result
+    if (result && (result.ok || result.status === 0 || result.status === "0")) {
+      // success path (adjust according to your backend response shape)
+      console.log("Message successfully queued/sent:", result);
+      alert("Thanks! WhatsApp message will be sent shortly.");
+      // optionally continue your share flow / popup close / redirect
+    } else {
+      console.error("Send failed:", result);
+      alert("Could not send WhatsApp message. See console logs for details.");
+    }
   });
 });
-
-// ================================================================
 </script>
 
 
